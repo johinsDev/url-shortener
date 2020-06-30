@@ -1,0 +1,5 @@
+- Seeds and factories
+- Controllers and blueprints
+- config file
+- divide on modules
+- better response error for validate
