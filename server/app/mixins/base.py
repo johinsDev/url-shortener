@@ -31,6 +31,18 @@ class Base(Timestamp):
     def create(cls, **kw):
         r = cls(**kw)
         db.session.add(r)
+        db.session.flush()
+        return r
+
+    @classmethod
+    def get_or_create(cls, **kw):
+        r = cls.get_by(**kw)
+
+        if not r:
+            r = cls(**kw)
+            db.session.add(r)
+            db.session.flush()
+
         return r
 
     @classmethod
@@ -44,15 +56,19 @@ class Base(Timestamp):
 
     @classmethod
     def get_by(cls, **kw):
-        result = cls.query.filter_by(**kw).first()
-
-        if result:
-            return result
-        else:
-            raise ModelNotFoundError("Error")
+        return cls.query.filter_by(**kw).first()
 
     def save(self):
         db.session.add(self)
+        db.session.commit()
+        return self
+
+    def commit(self):
+        db.session.commit()
+
+    def increment(self, column):
+        setattr(self, column, getattr(self, column) + 1)
+        return self
 
     def serialize(self):
         result = dict()

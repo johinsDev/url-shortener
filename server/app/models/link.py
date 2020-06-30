@@ -6,6 +6,7 @@ from ..helpers.Math import Math
 from datetime import datetime
 
 from ..mixins.base import Base
+from sqlalchemy import event
 
 
 class Link(db.Model, Base):
@@ -19,13 +20,6 @@ class Link(db.Model, Base):
     requested_count = sa.Column(
         sa.BigInteger,  server_default="0", nullable=False)
     used_count = sa.Column(sa.BigInteger,  server_default="0", nullable=False)
-
-    def serialize(self):
-        data = super().serialize()
-
-        data['shortener_url'] = self.shortener_url()
-
-        return data
 
     def get_code(self):
         if self.id is None:
@@ -41,3 +35,14 @@ class Link(db.Model, Base):
 
     def __repr__(self):
         return '<Link %r>' % self.id
+
+
+@event.listens_for(Link, 'after_insert')
+def receive_after_insert(mapper, connection, target):
+    link_table = Link.__table__
+    if target.code is None:
+        connection.execute(
+            link_table.update().
+            where(link_table.c.id == target.id).
+            values(code=target.get_code())
+        )

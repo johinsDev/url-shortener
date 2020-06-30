@@ -4,26 +4,41 @@ import os
 from flask import request, jsonify
 from app.models.link import Link
 from app.exceptions.model_not_found import ModelNotFoundError
+from marshmallow import Schema, fields
 
 from app.requests.link_create_requests import link_create_requests
 from marshmallow import (
     ValidationError
 )
-from app.models import db
 
 app = create_app(config['development'])
+
+
+class LinkSchema(Schema):
+    shortened_url = fields.Function(lambda obj: obj.shortener_url())
+
+    class Meta:
+        fields = ('original_url', 'code', 'shortened_url', 'requested_count')
+
+
+def response(data):
+    return jsonify({
+        'data':  data
+    })
 
 
 @app.route('/')
 def hello():
     try:
         link = Link.get_by(code=request.args.get('code', ''))
-
-        return jsonify({
-            'data':  link.serialize()
-        }), 200
     except ModelNotFoundError as e:
         return jsonify({'error': str(e)}), 404
+
+    link.increment('requested_count')
+
+    link.save()
+
+    return response(LinkSchema().dump(link)), 200
 
 
 @app.route('/', methods=['POST'])
@@ -35,18 +50,13 @@ def store():
     except ValidationError as err:
         return err.messages, 422
 
-    link = Link(original_url=json['url'])
+    link = Link.get_or_create(original_url=json['url'])
 
-    db.session.add(link)
-    # link.code = link.get_code()
+    link.code = link.get_code()
 
-    # link.save()
+    link.save()
 
-    return jsonify({
-        'data': {
-            'id': link.id
-        }
-    }), 404
+    return response(LinkSchema().dump(link)), 200
 
 
 if __name__ == '__main__':
