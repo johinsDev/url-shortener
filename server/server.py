@@ -6,6 +6,7 @@ from app.models.link import Link
 from app.exceptions.model_not_found import ModelNotFoundError
 from marshmallow import Schema, fields
 from app.requests.link_create_requests import link_create_requests
+from functools import wraps
 from marshmallow import (
     ValidationError
 )
@@ -63,6 +64,30 @@ def hello():
 
     link.save()
 
+    return response(LinkSchema().dump(link)), 200
+
+
+def binding(model):
+    def inner(function):
+        @wraps(function)
+        def wrap(*args, **kwargs):
+            try:
+                values = dict()
+
+                values[str(model.__name__).lower()] = model.get_by(**kwargs)
+
+                return function(*args, **values, **kwargs)
+            except ModelNotFoundError as e:
+                return jsonify({'error': str(e)}), 404
+
+        return wrap
+
+    return inner
+
+
+@app.route('/model_binding/<code>')
+@binding(Link)
+def model_binding(code, link):
     return response(LinkSchema().dump(link)), 200
 
 
