@@ -1,17 +1,33 @@
-from app import create_app
+from app import create_app, cache
 from config import config
 import os
 from flask import request, jsonify
 from app.models.link import Link
 from app.exceptions.model_not_found import ModelNotFoundError
 from marshmallow import Schema, fields
-
 from app.requests.link_create_requests import link_create_requests
 from marshmallow import (
     ValidationError
 )
 
 app = create_app(config['development'])
+
+
+def modify_url_request_data(function):
+    def wrap(*args, **kwargs):
+        json = request.get_json(force=True)
+
+        try:
+            link_create_requests.load({"url": json['url']})
+        except:
+            request.url = "aja"
+            return function('http://' + json['url'])
+
+        return function(json['url'])
+
+    wrap.__name__ = function.__name__
+
+    return wrap
 
 
 class LinkSchema(Schema):
@@ -26,11 +42,20 @@ def response(data):
         'data':  data
     })
 
+# @TODO CAche forever, use flask resource, divider better files, decorator for validate
+
 
 @app.route('/')
 def hello():
     try:
-        link = Link.get_by(code=request.args.get('code', ''))
+        key = "link." + request.args.get('code', '')
+
+        link = cache.get(key)
+
+        if link is None:
+            link = Link.get_by(code=request.args.get('code', ''))
+
+            cache.add("link." + request.args.get('code', ''), link, 500000000)
     except ModelNotFoundError as e:
         return jsonify({'error': str(e)}), 404
 
@@ -42,15 +67,9 @@ def hello():
 
 
 @app.route('/', methods=['POST'])
-def store():
-    json = request.get_json(force=True)
-
-    try:
-        link_create_requests.load(json)
-    except ValidationError as err:
-        return err.messages, 422
-
-    link = Link.get_or_create(original_url=json['url'])
+@modify_url_request_data
+def store(url):
+    link = Link.get_or_create(original_url=url)
 
     link.code = link.get_code()
 

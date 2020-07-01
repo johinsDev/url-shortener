@@ -3,8 +3,12 @@ from .models import db
 from .models.link import Link
 from flask_migrate import Migrate
 from sqlalchemy_utils import database_exists, create_database
+from flask_caching import Cache
 
 app = Flask(__name__)
+
+cache = Cache(config={'CACHE_TYPE': 'simple'})
+
 
 migrate = Migrate(app, db)
 
@@ -17,5 +21,6 @@ def create_app(env):
 
     with app.app_context():
         db.init_app(app)
+        cache.init_app(app)
 
     return app
