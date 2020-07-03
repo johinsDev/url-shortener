@@ -23,8 +23,6 @@ class LinkResource(Resource):
     def post(self, url):
         link = Link.get_or_create(original_url=url)
 
-        link.code = link.get_code()
-
         link.increment('requested_count')
 
         link.save()

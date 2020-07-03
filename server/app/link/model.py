@@ -1,4 +1,5 @@
 import sqlalchemy as sa
+from sqlalchemy import event
 import os
 from app import db
 from ..exceptions.code_generation_exception import CodeGenerationException
@@ -35,3 +36,14 @@ class Link(db.Model, Base):
 
     def __repr__(self):
         return '<Link %r>' % self.id
+
+
+@event.listens_for(Link, 'after_insert')
+def receive_after_insert(mapper, connection, target):
+    link_table = Link.__table__
+    if target.code is None:
+        connection.execute(
+            link_table.update().
+            where(link_table.c.id == target.id).
+            values(code=target.get_code())
+        )
