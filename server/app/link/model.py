@@ -20,6 +20,8 @@ class Link(db.Model, Base):
     requested_count = sa.Column(
         sa.BigInteger,  server_default="0", nullable=False)
     used_count = sa.Column(sa.BigInteger,  server_default="0", nullable=False)
+    last_used = sa.Column(sa.DateTime, nullable=True)
+    last_requested = sa.Column(sa.DateTime, nullable=True)
 
     def get_code(self):
         if self.id is None:
