@@ -1,6 +1,6 @@
 import sqlalchemy as sa
 import os
-from . import db
+from app import db
 from ..exceptions.code_generation_exception import CodeGenerationException
 from ..helpers.Math import Math
 from datetime import datetime

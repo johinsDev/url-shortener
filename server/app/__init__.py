@@ -1,14 +1,14 @@
 from flask import Flask
-from .models import db
-from .models.link import Link
 from flask_migrate import Migrate
 from sqlalchemy_utils import database_exists, create_database
 from flask_caching import Cache
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
 
 app = Flask(__name__)
 
 cache = Cache(config={'CACHE_TYPE': 'simple'})
-
 
 migrate = Migrate(app, db)
 
