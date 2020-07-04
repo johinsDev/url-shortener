@@ -12,6 +12,17 @@ services:
     ports:
       - 5000:5000
 
+  client:
+    ports:
+      - 3000:3000
+    build: ./client
+    volumes:
+      - ./client:/usr/src/app
+      - /usr/src/app/node_modules
+      - /usr/src/app/.next
+    env_file:
+      - client/.env
+
   database:
     image: postgres
     environment:
