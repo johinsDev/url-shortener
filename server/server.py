@@ -2,6 +2,7 @@ from app import create_app
 from config import config
 from flask import request, Blueprint
 from flask_restful import Api
+from flask_cors import CORS
 
 from app.link import routes as routes_link
 
@@ -14,6 +15,7 @@ apiV1 = Api(api_bp)
 
 app.register_blueprint(api_bp)
 
+cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # ROUTES
 routes_link(api=apiV1)

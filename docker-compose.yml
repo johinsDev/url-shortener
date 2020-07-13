@@ -19,9 +19,12 @@ services:
     volumes:
       - ./client:/usr/src/app
       - /usr/src/app/node_modules
-      - /usr/src/app/.next
-    env_file:
-      - client/.env
+    environment:
+      - NODE_ENV=development
+      - REACT_APP_SERVICE_URL=http://localhost:8080
+      - CHOKIDAR_USEPOLLING=true
+    depends_on:
+      - api
 
   database:
     image: postgres

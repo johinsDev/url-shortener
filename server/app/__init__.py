@@ -3,7 +3,6 @@ from flask_migrate import Migrate
 from sqlalchemy_utils import database_exists, create_database
 from flask_caching import Cache
 from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS
 
 db = SQLAlchemy()
 
@@ -16,8 +15,6 @@ migrate = Migrate(app, db)
 
 def create_app(env):
     app.config.from_object(env)
-
-    CORS(app)
 
     if not database_exists(env.SQLALCHEMY_DATABASE_URI):
         create_database(env.SQLALCHEMY_DATABASE_URI)

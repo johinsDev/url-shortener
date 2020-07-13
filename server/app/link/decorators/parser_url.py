@@ -14,7 +14,7 @@ def modify_url_request_data(function):
         except:
             return function(url='http://' + json['url'], *args, **kwargs)
 
-        return function(json['url'])
+        return function(url=json['url'], *args, **kwargs)
 
     wrap.__name__ = function.__name__
 
